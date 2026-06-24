@@ -8,3 +8,8 @@ lightning_logs
 *.pyc
 _*
 *.ckpt
+
+datasets/
+predictions/
+__pycache__/
+weights/

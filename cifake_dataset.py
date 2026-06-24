@@ -58,7 +58,8 @@ class CIFAKEDataset(Dataset):
         sample = {
             "image_path": self.items[i]["image_path"],
             "image": self.read_image(self.items[i]["image_path"]),
-            "is_real": torch.as_tensor([1 if self.items[i]["is_real"] is True else 0]),
+            #"is_real": torch.as_tensor([1 if self.items[i]["is_real"] is True else 0]),
+            "is_real": torch.tensor(1.0 if self.items[i]["is_real"] else 0.0, dtype=torch.float32),
         }
         return sample
     
@@ -91,7 +92,7 @@ class CIFAKEDataset(Dataset):
         
         plt.xlabel('Label')
         plt.ylabel('Count')
-        plt.title(f'[DFFD] Distribution of labels for split {self.split}')
+        plt.title(f'[CIFAKE] Distribution of labels for split {self.split}')
         plt.xticks(labels)
         plt.yticks(range(0, max(counts) + 1, max(counts) // 10))
         

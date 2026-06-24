@@ -40,18 +40,41 @@ class COCOFakeDataset(Dataset):
         self.resolution = resolution
 
     def parse_datasets(self):
+        import random
         data = []
         split_path = join(self.coco_fake_path, f"{self.split}2014")
+
+        # Deterministic random sampling for reproducibility
+        rng = random.Random(42)
+
+        # Subsample: 1 fake per real for training (5x speedup, 1:1 balance)
+        # Validation: keep all fakes for thorough evaluation
+        pick_one_per_folder = (self.split == "train")
+
         for folder in sorted(listdir(split_path)):
-            for filename in sorted(listdir(join(split_path, folder))):
-                if not filename.lower().endswith(".jpg"):
-                    continue
+            folder_path = join(split_path, folder)
+            jpg_files = [f for f in sorted(listdir(folder_path))
+                         if f.lower().endswith(".jpg")]
+            if not jpg_files:
+                continue
+
+            if pick_one_per_folder:
+                jpg_files = [rng.choice(jpg_files)]
+
+            for filename in jpg_files:
                 data.append({
-                    "fake_image_path": join(split_path, folder, filename),
-                    "real_image_path": join(self.coco2014_path, f"{self.split}2014", f"{folder}.jpg"),
+                    "fake_image_path": join(folder_path, filename),
+                    "real_image_path": join(self.coco2014_path,
+                                             f"{self.split}2014",
+                                             f"{folder}.jpg"),
                 })
-                assert exists(data[-1]["fake_image_path"]), f"{data[-1]['fake_image_path']} does not exists"
-                assert exists(data[-1]["real_image_path"]), f"{data[-1]['real_image_path']} does not exists"
+                assert exists(data[-1]["fake_image_path"]), \
+                    f"{data[-1]['fake_image_path']} does not exists"
+                assert exists(data[-1]["real_image_path"]), \
+                    f"{data[-1]['real_image_path']} does not exists"
+
+        print(f"[COCOFake] Parsed {len(data)} fake-real pairs for split={self.split}"
+              f"{' (subsampled 1:1)' if pick_one_per_folder else ''}")
         return data
 
     def __len__(self):
@@ -88,7 +111,8 @@ class COCOFakeDataset(Dataset):
             sample = {
                 "image_path": self.items[i]["image_path"],
                 "image": self.read_image(self.items[i]["image_path"]),
-                "is_real": torch.as_tensor([1 if self.items[i]["is_real"] is True else 0]),
+                #"is_real": torch.as_tensor([1 if self.items[i]["is_real"] is True else 0]),
+                "is_real": torch.tensor(1.0 if self.items[i]["is_real"] else 0.0, dtype=torch.float32),
             }
         elif self.mode == "couple":
             sample = {
@@ -150,8 +174,8 @@ class COCOFakeDataset(Dataset):
 if __name__=="__main__":
     import random
     
-    coco2014_path = "../../datasets/coco2014"
-    coco_fake_path = "../../datasets/fake_coco"
+    coco2014_path = "D:/sweet/binary_deepfake_detection/datasets/coco2014"
+    coco_fake_path = "D:/sweet/binary_deepfake_detection/datasets/fake_coco"
     for split in ["train", "val"]:
         for mode in ["single", "couple"]:
             dataset = COCOFakeDataset(coco2014_path=coco2014_path, coco_fake_path=coco_fake_path, split=split, mode=mode, resolution=224)

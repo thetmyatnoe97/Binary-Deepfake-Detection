@@ -63,7 +63,8 @@ class DFFDDataset(Dataset):
         for subdataset_item in subdatasets:
             subdataset_path = join(self.dataset_path, subdataset_item["name"])
             if not isdir(subdataset_path):
-                raise f"subdataset {subdataset_path} not found"
+                raise FileNotFoundError(f"subdataset {subdataset_path} not found")
+                #raise f"subdataset {subdataset_path} not found"
             is_real = subdataset_item["is_real"]
             
             if subdataset_item["name"] == "img_align_celeba":
@@ -76,7 +77,8 @@ class DFFDDataset(Dataset):
                     })
             else:
                 subdataset_split_path = join(subdataset_path, "validation" if self.split == "val" else self.split)
-                assert f"no split folder found in {subdataset_path}"
+                assert isdir(subdataset_split_path), f"no split folder found: {subdataset_split_path}"
+
                 for filename in sorted(listdir(subdataset_split_path)):
                     if not is_image(filename):
                         continue
@@ -104,7 +106,8 @@ class DFFDDataset(Dataset):
         sample = {
             "image_path": self.items[i]["image_path"],
             "image": self.read_image(self.items[i]["image_path"]),
-            "is_real": torch.as_tensor([1 if self.items[i]["is_real"] is True else 0]),
+            #"is_real": torch.as_tensor([1 if self.items[i]["is_real"] is True else 0]),
+            "is_real": torch.tensor(1.0 if self.items[i]["is_real"] else 0.0, dtype=torch.float32),
         }
         return sample
     

@@ -44,6 +44,10 @@ if __name__ == "__main__":
             "coco_fake_path": "../../datasets/fake_coco",
             "cifake_path": "../../datasets/cifake",
             "dffd_path": "../../datasets/dffd",
+            "face_path": "../../datasets/face", 
+            "face140k_path": "../../datasets/face_140k",
+            "forensics_path": "../../datasets/forensics",
+            "artifact_path": "../../datasets/artifact",
             "labels": 2,
         },
         "model": {

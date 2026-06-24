@@ -1,0 +1,2 @@
+model,source_dataset,target_dataset,accuracy,auc,n_test,timestamp
+phasedfd_t,dffd,cifake,52.4500,57.2159,20000,2026-05-13T11:30:33.010149Z

@@ -3,12 +3,46 @@
 import yaml
 import torch.utils.data as data
 from sklearn.metrics import roc_auc_score
+from pathlib import Path
 
 
-def load_config(config_file):
-    with open(config_file, 'r') as f:
-        config = yaml.safe_load(f)
-    return config
+def load_config(config_path):
+    """
+    Load YAML configuration file with proper UTF-8 encoding.
+    
+    Args:
+        config_path: Path to config file (.cfg or .yaml)
+        
+    Returns:
+        dict: Configuration dictionary
+    """
+    config_path = Path(config_path)
+    
+    if not config_path.exists():
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+    
+    try:
+        # Try UTF-8 first
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+        return config
+    except UnicodeDecodeError:
+        # Fallback: try different encodings
+        for encoding in ['utf-8-sig', 'latin-1', 'cp1252']:
+            try:
+                with open(config_path, 'r', encoding=encoding) as f:
+                    config = yaml.safe_load(f)
+                print(f"Warning: Loaded config with {encoding} encoding")
+                return config
+            except UnicodeDecodeError:
+                continue
+        
+        # If all fail, raise error
+        raise UnicodeDecodeError(
+            'utf-8', b'', 0, 1,
+            f"Could not decode {config_path} with any standard encoding. "
+            f"Please save the file with UTF-8 encoding."
+        )
 
 
 def update_learning_rate(epoch):
